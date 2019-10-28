@@ -1,60 +1,38 @@
-const getList = (author, keyword) => {
+const { exec } = require('../db/mysql')
 
-    return [
-        {
-            id: 1,
-            title: '标题A',
-            content: '内容A',
-            createTime: 1571974161424,
-            author: author,
-        },
-        {
-            id: 2,
-            title: '标题A',
-            content: '内容A',
-            createTime: 1571974161424,
-            author: author,
-        },
-        {
-            id: 3,
-            title: '标题A',
-            content: '内容A',
-            createTime: 1571974161424,
-            author: author,
-        },
-        {
-            id: 4,
-            title: '标题A',
-            content: '内容A',
-            createTime: 1571974161424,
-            author: author,
-        },
-        {
-            id: 5,
-            title: '标题A',
-            content: '内容A',
-            createTime: 1571974161424,
-            author: author,
-        },
-    ]
+const getList = (author, keyword) => {
+    let sql = `select * from blogs where 1=1 `; //where 1=1 占位 兜底 避免author和keyword都没有 语句报错
+    if (author) {
+        sql += `and author='${author}'`
+    } 
+    if (keyword) {
+        sql += `and title like '%${keyword}%'`
+    }
+    sql += `order by createtime desc`;
+    return exec(sql);
 }
 
 const getDetail = (id) => {
-    return {
-        id: id,
-        title: '标题',
-        content: '内容',
-        createTime: 1571974161424,
-        author: 'author'
-    }
+    let sql = `select * from blogs where id="${id}";`;
+    return exec(sql);
 }
 
 const newBlog = (blogData) => {
     //处理后插入到数据库中
-    console.log('newBlogData', blogData = {} )
-    return {
-        id: 0000001,
-    }
+    const title = blogData.title;
+    const content = blogData.content;
+    const author = blogData.author;
+    const createtime = Date.now();
+    
+    const sql = `
+         insert into blogs (title, content, createtime, author)
+         values ('${title}', '${content}', '${createtime}', '${author}')
+     `
+    return exec(sql).then( insertData => {
+        return {
+            id: insertData.insertId
+        }
+    })
 }
 
 const upDate = (id, blogData = {}) => {
