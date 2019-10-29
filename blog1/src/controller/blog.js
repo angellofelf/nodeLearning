@@ -17,7 +17,7 @@ const getDetail = (id) => {
     return exec(sql);
 }
 
-const newBlog = (blogData) => {
+const newBlog = (blogData ={}) => {
     //处理后插入到数据库中
     const title = blogData.title;
     const content = blogData.content;
@@ -36,13 +36,27 @@ const newBlog = (blogData) => {
 }
 
 const upDate = (id, blogData = {}) => {
-    console.log('id', id);
+    const { title, content } = blogData;
 
-    return true ;
+    const sql = `update blogs set title="${title}", content="${content}" where id="${id} "`
+    return exec(sql).then(updateData => {
+        if (updateData.affectedRows > 0) {
+            return true;
+        }
+        return false;
+    }) ;
 }
 
-const delBlog = (id) => {
-    return true
+const delBlog = (id, delData) => {
+    const { author } = delData;
+    const sql = `delete from blogs where id=${id} and author="${author}"`
+    
+    return exec(sql).then(deleteData => {
+        if (deleteData.affectedRows > 0) {
+            return true
+        }
+        return false ;
+    })
 }
 module.exports = {
     getList,
