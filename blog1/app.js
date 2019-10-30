@@ -2,7 +2,16 @@ const quertString = require('querystring')
 
 const handleBlogRouter = require('./src/route/blog')
 const handleUserRouter = require('./src/route/user')
+const { get, set } = require('./src/db/redis')
+// session
+// const SESSION_DATA = {};
 
+//设置cookie过期时间
+const getCookieExpires = () => {
+    const d = new Date();
+    d.setTime(d.getTime() + (24 * 60 * 60 * 1000));
+    return d.toGMTString();
+}
 
 //用于处理 post data
 const getPostData = (req) => {
@@ -51,12 +60,48 @@ const serverHandle = (req, res) => {
     cookieStr.split(';').forEach(item => {
         if (!item) return ;
         const arr = item.split('=');
-        const key = arr[0];
-        const val = arr[1];
+        const key = arr[0].trim();
+        const val = arr[1].trim();//quchucookie自己加的空格，不然前端写的cookie会覆盖后端的，因为后端的在后边就会有空格
         req.cookie[key] = val; 
     })
-    //处理postData 
-    getPostData(req).then( postData => {
+    // 解析session
+    // let needSetCookie = false;
+    // let userId = req.cookie.userid; 
+    // if (userId) {
+    //     if(!SESSION_DATA[userId]){
+    //         SESSION_DATA[userId] = {};
+    //     }
+    // } else {
+    //     needSetCookie = true;
+    //     userId =`${Date.now()}_${Math.random}` ;
+    //     SESSION_DATA[userId] = {};
+    // }
+    // req.session = SESSION_DATA[userId];
+
+    // 解析session (使用redis)
+    let needSetCookie = false;
+    let userId = req.cookie.userid; 
+    if (!userId) {
+        needSetCookie = true;
+        userId =`${Date.now()}_${Math.random}` ;
+        //初始化 redis 中的 session值
+        set(userId, {})
+    }
+    //获取session
+    req.sessionId = userId;
+    get(req.sessionId).then( sessionData => {
+        if (sessionData == null) {
+            //初始化 redis 中的session
+            set(req.sessionId, {})
+            //设置session;
+            req.session = {}
+        } else {
+            req.session = sessionData;
+        }
+       console.log('req.session is ' ,req.session);
+       //将两个promise连接起来,  //处理postData 
+       return getPostData(req) ;
+    }).then( postData => {
         req.body = postData;
         //处理blog路由
         // const blogData = handleBlogRouter(req, res);
@@ -71,6 +116,7 @@ const serverHandle = (req, res) => {
         if (blogResult) {
             blogResult.then(blogData => {
                 if (blogData) {
+                    if(needSetCookie) res.setHeader('Set-Cookie', `userid=${userId}; path=/; httpOnly; expires=${getCookieExpires()}`)
                         res.end(
                             JSON.stringify(blogData)
                         )
@@ -82,6 +128,7 @@ const serverHandle = (req, res) => {
         const userResult = handleUserRouter(req, res);
         if (userResult) {
             userResult.then(userData => {
+               if(needSetCookie) res.setHeader('Set-Cookie', `userid=${userId}; path=/; httpOnly; expires=${getCookieExpires()}`)
                 res.end(
                     JSON.stringify(userData)
                 )

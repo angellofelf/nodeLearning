@@ -1,7 +1,6 @@
 const { SuccessModel, ErrorModel } = require('../model/resMoel')
 const { login } = require('../controller/user')
-
-
+const { set } = require('../db/redis')
 
 const handleUserRouter = (req, res) => {
    const  method = req.method;
@@ -26,10 +25,13 @@ const handleUserRouter = (req, res) => {
     const result = login(username, password);
     return result.then(data => {
         if (data.username) {
+            // 设置session
+            req.session.username = data.username;
+            req.session.realname = data.realname;
             
-            res.setHeader('Set-Cookie', `username=${data.username};path=/`)
-
-            return new SuccessModel('登录成功');
+            //同步到session
+            set(req.sessionId, req.session)
+            return new SuccessModel(data.username);
         }
         return new ErrorModel('登录失败')
     })
@@ -37,8 +39,8 @@ const handleUserRouter = (req, res) => {
 }
    //登录测试
    if (method === 'GET' && req.path === '/api/user/login-test') {
-       if (req.cookie.username) {
-           return Promise.resolve(new SuccessModel('登陆成功'));
+       if (req.session.username) {
+           return Promise.resolve(new SuccessModel(req.session));
        }
        return Promise.resolve(new ErrorModel('尚未登录'))
    }
