@@ -8,13 +8,25 @@ const {
 } = require('../controller/blog')
 const { SuccessModel, ErrorModel } = require('../model/resMoel')
 
+
+//统一的登录验证函数
+const loginCheck = (req) => {
+    if (!req.session.username) {
+        return Promise.resolve(new ErrorModel('尚未登录'));
+    }
+}
 const handleBlogRouter = (req, res) => {
     const method = req.method;
     const id = req.query.id;
 
     //获取博客列表
     if (method === 'GET' && req.path === '/api/blog/list') {
-
+       
+       const loginResult = loginCheck(req);
+       console.log('loginResult', loginResult)
+       if (loginResult) {
+            return loginResult
+       }
        const author = req.query.author || '';
        const keyword = req.query.keyword || '';
 
@@ -27,7 +39,11 @@ const handleBlogRouter = (req, res) => {
 
     //获取博客详情
     if (method === 'GET' && req.path === '/api/blog/detail') {
-        
+        const loginResult = loginCheck(req);
+        if (loginResult) {
+             return loginResult
+        }
+
         const result = getDetail(id);
 
         return result.then(data => {
@@ -37,8 +53,12 @@ const handleBlogRouter = (req, res) => {
 
     //新建一篇博客
     if (method === 'POST' && req.path === '/api/blog/new') {
+        const loginResult = loginCheck(req);
+        if (loginResult) {
+             return loginResult
+        }
         //假数据的author
-        req.body.author = 'zhangsan';
+        req.body.author = req.session.username;
         const result = newBlog(req.body)
         return result.then(data => {
             return new SuccessModel(data) ;
@@ -47,6 +67,10 @@ const handleBlogRouter = (req, res) => {
 
     //更新一篇博客
     if (method === 'POST' && req.path === '/api/blog/update') {
+        const loginResult = loginCheck(req);
+        if (loginResult) {
+             return loginResult
+        }
         const result = upDate(id, req.body);
 
         return result.then( val => {
@@ -60,8 +84,12 @@ const handleBlogRouter = (req, res) => {
 
     //删除一篇博客
     if (method === 'POST' && req.path === '/api/blog/delete') {
+        const loginResult = loginCheck(req);
+        if (loginResult) {
+             return loginResult
+        }
         //假数据的author
-        req.body.author = 'zhangsan';
+        req.body.author = req.session.username;
        const result = delBlog(id, req.body);
        
        return result.then( val => {

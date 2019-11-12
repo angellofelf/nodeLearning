@@ -53,7 +53,7 @@ const serverHandle = (req, res) => {
 
     //解析 query
     req.query = quertString.parse(url.split('?')[1]);
-    
+    console.log(req.query)
     //解析 cookie
     req.cookie = {};
     const cookieStr = req.headers.cookie || '';

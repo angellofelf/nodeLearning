@@ -20,8 +20,8 @@ const handleUserRouter = (req, res) => {
 //    }
 
    //登录ceshi2
-   if (method === 'GET' && req.path === '/api/user/login') {
-    const { username, password } = req.query;
+   if (method === 'POST' && req.path === '/api/user/login') {
+       const { username, password } = req.body;
     const result = login(username, password);
     return result.then(data => {
         if (data.username) {
@@ -37,16 +37,16 @@ const handleUserRouter = (req, res) => {
     })
 
 }
-   //登录测试
-   if (method === 'GET' && req.path === '/api/user/login-test') {
-       if (req.session.username) {
-           return Promise.resolve(new SuccessModel(req.session));
-       }
-       return Promise.resolve(new ErrorModel('尚未登录'))
-   }
+//    //登录测试
+//    if (method === 'GET' && req.path === '/api/user/login-test') {
+//        if (req.session.username) {
+//            return Promise.resolve(new SuccessModel(req.session));
+//        }
+//        return Promise.resolve(new ErrorModel('尚未登录'))
+//    }
 
+// }
 }
-
 //登录验证测试
 
 module.exports = handleUserRouter;
