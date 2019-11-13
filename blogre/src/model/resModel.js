@@ -11,7 +11,7 @@ class BaseModel {
             this.data = data;
         }
         if (message) {
-            this.message = message;
+            this.cv = message;
         }
     }
 }
