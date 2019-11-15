@@ -22,14 +22,18 @@ const handleBlogRouter = (req, res) => {
     //获取博客列表
     if (method === 'GET' && req.path === '/api/blog/list') {
        
-       const loginResult = loginCheck(req);
-       console.log('loginResult', loginResult)
-       if (loginResult) {
-            return loginResult
-       }
-       const author = req.query.author || '';
-       const keyword = req.query.keyword || '';
 
+       let author = req.query.author || '';
+       const keyword = req.query.keyword || '';
+    if (req.query.isadmin) {
+        //管理员界面
+        const loginResult = loginCheck(req);
+        if (loginResult) {
+             return loginResult
+        }
+        author = req.session.username;
+    }
+    //强制查询自己的博客
        const result = getList(author, keyword);
     //    return new SuccessModel(listData );
        return result.then( listdata => {

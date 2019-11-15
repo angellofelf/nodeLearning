@@ -9,12 +9,22 @@ const {
     ErrorModal,
  } = require('../model/resModel')
 
-
+ //统一的登陆验证函数 类似中间件
+const loginCheck = (req) => {
+    if (!req.session.username) {
+        return Promise.resolve(new ErrorModal('尚未登录'))
+    }
+}
 const handleBlogRouter = (req, res) => {
     const method = req.method;
   
 
     if (method === 'GET' && req.path === '/api/blog/list') {
+        const loginCheckResult = loginCheck(req);
+        if (loginCheckResult) {
+            return loginCheckResult;
+        }
+       
         const author = req.query.author || '';
         const keyword = req.query.keyword || '';
 
@@ -25,6 +35,11 @@ const handleBlogRouter = (req, res) => {
     }
 
     if (method === 'GET' && req.path === '/api/blog/detail') {
+        const loginCheckResult = loginCheck(req);
+        if (loginCheckResult) {
+            return loginCheckResult;
+        }
+
        const id = req.query.id;
        const result = getDetail(id)
        return result.then(data => {
@@ -33,8 +48,13 @@ const handleBlogRouter = (req, res) => {
     }
 
     if (method === 'POST' && req.path === '/api/blog/new') {
+        const loginCheckResult = loginCheck(req);
+        if (loginCheckResult) {
+            return loginCheckResult;
+        }
+
         const blogData = req.body;
-        req.body.author = 'zhangsan';
+        req.body.author = req.session.username;
         const result = newBlog(blogData);
         return result.then(data => {
             return new SuccessModal(data)
@@ -42,6 +62,11 @@ const handleBlogRouter = (req, res) => {
     }
     
     if (method === 'POST' && req.path === '/api/blog/update') {
+        const loginCheckResult = loginCheck(req);
+        if (loginCheckResult) {
+            return loginCheckResult;
+        }
+
         const result = updateBlog(id, req.body) ;
         return result.then(val => {
             if (val) {
@@ -52,7 +77,13 @@ const handleBlogRouter = (req, res) => {
         })
     }
     if (method === 'POST' && req.path === '/api/blog/del') {
-         req.body.author = 'zhangsan';
+        const loginCheckResult = loginCheck(req);
+        if (loginCheckResult) {
+            //未登录
+            return loginCheckResult;
+        }
+
+         req.body.author = req.session.username;
          const result = delBlog(id, req.body.author);
 
          return result.then(val => {

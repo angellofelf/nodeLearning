@@ -1,7 +1,7 @@
 
 const { login } = require('../controller/user')
 const { SuccessModal, ErrorModal } = require('../model/resModel')
-
+const { set } = require('../db/redis')
 const getCookieExpires = () => {
    let d = Date.now();
    d = d.setTime(d.getTime()+24*60*60*1000);
@@ -26,6 +26,7 @@ const handleUserRouter = (req, res) => {
                 //登陆成功后 后台把用户信息存入session
                 req.session.username = data.username;
                 req.session.realName = data.realName;
+                set(req.sessionId, req.session)
                 return new SuccessModal()
             } else {
                 return new ErrorModal('登陆失败')
