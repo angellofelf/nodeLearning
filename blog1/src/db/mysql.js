@@ -21,7 +21,12 @@ function exec(sql) {
     })
 }
 
+function escape(str) {
+    if (!str) return  ;
+    return mysql.escape(str);
+}
 //不用关闭在这里
 module.exports = {
     exec,
+    escape: escape,
 }

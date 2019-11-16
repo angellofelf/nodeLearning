@@ -1,32 +1,39 @@
-const { exec } = require('../db/mysql')
+const { exec, escape } = require('../db/mysql')
 
 const getList = (author, keyword) => {
     let sql = `select * from blogs where 1=1 `; //where 1=1 占位 兜底 避免author和keyword都没有 语句报错
     if (author) {
-        sql += `and author='${author}'`
+        author = escape(author);
+        sql += `and author=${author}`
     } 
+    
     if (keyword) {
-        sql += `and title like '%${keyword}%'`
+        console.log(escape('%'+keyword+'%')) 
+        keyword = escape('%'+keyword+'%');
+        sql += ` and title like ${keyword}`
     }
-    sql += `order by createtime desc`;
+    sql += ` order by createtime desc`;
+    console.log('查询的语句', sql)
+    console.log('如果为空', escape(undefined))
     return exec(sql);
 }
 
 const getDetail = (id) => {
-    let sql = `select * from blogs where id="${id}";`;
+    id = escape(id)
+    let sql = `select * from blogs where id=${id};`;
     return exec(sql);
 }
 
 const newBlog = (blogData ={}) => {
     //处理后插入到数据库中
-    const title = blogData.title;
-    const content = blogData.content;
-    const author = blogData.author;
+    const title = escape(blogData.title);
+    const content = escape(blogData.content);
+    const author = escape(blogData.author);
     const createtime = Date.now();
     
     const sql = `
          insert into blogs (title, content, createtime, author)
-         values ('${title}', '${content}', '${createtime}', '${author}')
+         values (${title}, ${content}, ${createtime}, ${author})
      `
     return exec(sql).then( insertData => {
         return {
@@ -36,9 +43,10 @@ const newBlog = (blogData ={}) => {
 }
 
 const upDate = (id, blogData = {}) => {
-    const { title, content } = blogData;
-
-    const sql = `update blogs set title="${title}", content="${content}" where id="${id} "`
+    let { title, content } = blogData;
+    title = escape(title);
+    content = escape(content);
+    const sql = `update blogs set title=${title}, content=${content} where id=${id}`
     return exec(sql).then(updateData => {
         if (updateData.affectedRows > 0) {
             return true;
@@ -48,8 +56,10 @@ const upDate = (id, blogData = {}) => {
 }
 
 const delBlog = (id, delData) => {
-    const { author } = delData;
-    const sql = `delete from blogs where id=${id} and author="${author}"`
+    let { author } = delData;
+    id = escape(id);
+    author = escape(author);
+    const sql = `delete from blogs where id=${id} and author=${author}`
     
     return exec(sql).then(deleteData => {
         if (deleteData.affectedRows > 0) {
