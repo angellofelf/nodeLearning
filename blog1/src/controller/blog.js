@@ -1,5 +1,5 @@
 const { exec, escape } = require('../db/mysql')
-
+const xss = require('xss')
 const getList = (author, keyword) => {
     let sql = `select * from blogs where 1=1 `; //where 1=1 占位 兜底 避免author和keyword都没有 语句报错
     if (author) {
@@ -26,8 +26,9 @@ const getDetail = (id) => {
 
 const newBlog = (blogData ={}) => {
     //处理后插入到数据库中
-    const title = escape(blogData.title);
-    const content = escape(blogData.content);
+
+    const title = escape(xss(blogData.title));
+    const content = escape(xss(blogData.content));
     const author = escape(blogData.author);
     const createtime = Date.now();
     
