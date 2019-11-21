@@ -1,6 +1,7 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
+const fs = require('fs');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const session = require('express-session');
@@ -17,7 +18,24 @@ var app = express();
 // app.set('views', path.join(__dirname, 'views'));
 // app.set('view engine', 'jade');
 
-app.use(logger('dev'));
+// app.use(logger('dev'));
+//第一个参数dev/combined/common
+// 就是日志打印的格式 可以在github中查到
+//可以自己写日志中间件
+const ENV = process.env.NODE_ENV;
+if (ENV !== 'production') {
+  app.use(logger('dev'))
+} else {
+  const fullfilename = path.join(__dirname, 'logs', 'access.log');
+  const writeStream = fs.createWriteStream(fullfilename, {
+    flags: 'a'
+  })
+  app.use(logger('combined', {
+  stream: writeStream,
+}))
+}
+
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
